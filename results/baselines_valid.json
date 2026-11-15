@@ -1,0 +1,48 @@
+{
+  "random": {
+    "all": {
+      "users": 22210,
+      "NDCG@10": 0.00075,
+      "Recall@20": 0.00297,
+      "Coverage@10": 1.0,
+      "AvgPop@10": 18.33
+    },
+    "warm": {
+      "users": 19989,
+      "NDCG@10": 0.00071,
+      "Recall@20": 0.0029,
+      "Coverage@10": 1.0,
+      "AvgPop@10": 18.32
+    },
+    "cold": {
+      "users": 2221,
+      "NDCG@10": 0.0011,
+      "Recall@20": 0.0036,
+      "Coverage@10": 0.94698,
+      "AvgPop@10": 18.43
+    }
+  },
+  "most_popular": {
+    "all": {
+      "users": 22210,
+      "NDCG@10": 0.02083,
+      "Recall@20": 0.06137,
+      "Coverage@10": 0.00301,
+      "AvgPop@10": 427.37
+    },
+    "warm": {
+      "users": 19989,
+      "NDCG@10": 0.02141,
+      "Recall@20": 0.06263,
+      "Coverage@10": 0.00301,
+      "AvgPop@10": 426.99
+    },
+    "cold": {
+      "users": 2221,
+      "NDCG@10": 0.01563,
+      "Recall@20": 0.04998,
+      "Coverage@10": 0.00137,
+      "AvgPop@10": 430.8
+    }
+  }
+}
