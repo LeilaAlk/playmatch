@@ -29,8 +29,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REVIEW_FILE = "Video_Games.jsonl.gz"
-META_FILE = "meta_Video_Games.jsonl.gz"
+# Accepted names: compressed (.gz, from datarepo.eng.ucsd.edu) or not (.jsonl, from Hugging Face).
+REVIEW_FILES = ["Video_Games.jsonl.gz", "Video_Games.jsonl"]
+META_FILES = ["meta_Video_Games.jsonl.gz", "meta_Video_Games.jsonl"]
 
 # Words that mark non-game products in the category path or the title.
 NON_GAME_WORDS = re.compile(
@@ -62,8 +63,23 @@ def log(msg: str) -> None:
     print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
+def find_file(raw: Path, names: list[str]) -> Path:
+    for name in names:
+        path = raw / name
+        if path.exists():
+            with open(path, "rb") as f:
+                head = f.read(64)
+            if head.lstrip().startswith(b"<"):
+                raise SystemExit(f"{path} is a web page ({path.stat().st_size} bytes), not data: "
+                                 "the download failed. Delete it and download it again.")
+            return path
+    raise SystemExit(f"None of {names} found in {raw.resolve()}")
+
+
 def read_jsonl_gz(path: Path):
-    opener = gzip.open if path.suffix == ".gz" else open
+    with open(path, "rb") as f:
+        is_gzip = f.read(2) == b"\x1f\x8b"
+    opener = gzip.open if is_gzip else open
     with opener(path, "rt", encoding="utf-8") as f:
         for line in f:
             if line.strip():
@@ -214,7 +230,7 @@ def main() -> None:
     stats: dict = {"k": args.k, "cold_share": args.cold_share, "seed": args.seed}
 
     log("Loading item metadata...")
-    items, reasons = load_items(raw / META_FILE)
+    items, reasons = load_items(find_file(raw, META_FILES))
     stats["meta_filter_reasons"] = reasons
     stats["items_games"] = len(items)
     stats["platform_counts"] = counts(items.platform)
@@ -223,7 +239,7 @@ def main() -> None:
     log(f"  {len(items):,} games kept; filter reasons: {reasons}")
 
     log("Loading reviews (this is the long step)...")
-    reviews = load_reviews(raw / REVIEW_FILE)
+    reviews = load_reviews(find_file(raw, REVIEW_FILES))
     stats["raw"] = {"reviews": len(reviews), "users": reviews.user_id.nunique(),
                     "items": reviews.parent_asin.nunique()}
     reviews = reviews[reviews.parent_asin.isin(items.parent_asin)]

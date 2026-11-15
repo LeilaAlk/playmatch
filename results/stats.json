@@ -1,0 +1,60 @@
+{
+  "k": 5,
+  "cold_share": 0.1,
+  "seed": 42,
+  "meta_filter_reasons": {
+    "game_category": 48019,
+    "non_game_category": 67722,
+    "no_game_category": 8891,
+    "non_game_title": 6630,
+    "kept_without_category": 6007
+  },
+  "items_games": 54026,
+  "platform_counts": {
+    "PC": 19128,
+    "Nintendo": 12828,
+    "PlayStation": 12078,
+    "other": 5258,
+    "Xbox": 4734
+  },
+  "share_items_with_price": 0.5747,
+  "share_items_with_release_year": 0.9423,
+  "raw": {
+    "reviews": 4624615,
+    "users": 2766656,
+    "items": 137249
+  },
+  "games_only": {
+    "reviews": 1638753,
+    "users": 1024707,
+    "items": 54014,
+    "label_counts": {
+      "1": 1248125,
+      "-1": 264121,
+      "0": 126507
+    },
+    "share_gift_flag": 0.066
+  },
+  "k_core": {
+    "interactions": 224692,
+    "users": 22210,
+    "items": 7318,
+    "label_counts": {
+      "1": 194123,
+      "0": 16616,
+      "-1": 13953
+    },
+    "density": 0.001382
+  },
+  "split": {
+    "train_interactions": 156442,
+    "valid": 22210,
+    "test": 22210,
+    "cold_users": 2221,
+    "warm_users": 19989,
+    "cold_users_in_train": 0,
+    "test_pairs_in_train": 0,
+    "train_after_test_time": 0
+  },
+  "runtime_seconds": 132.6
+}
