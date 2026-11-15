@@ -4,9 +4,9 @@ Catalog: 7,318 games, 64 training examples (32 search, 32 rec)
 Example input  : <task_search> <plat_Nintendo> <plat_PlayStation> <price_20_40> <liked> <s_252> <b_92> <b_154> <liked> <s_48> <b_37> <b_121> <query> i am looking for a nintendo game under 58 dollars
 Example target : <s_177> <a_197> <a_96>
 
-Forward pass OK: input (16, 84), labels (16, 4), logits (16, 4, 32885), loss 13.5371 (0.85s)
+Forward pass OK: input (16, 84), labels (16, 4), logits (16, 4, 32885), loss 13.5371 (0.71s)
 Backward pass + 5 AdamW steps OK: loss on the same batch 13.5371 -> 9.5702
 
 Constrained beam search: 20 results, all valid game ids: True
 With hard platform filter 'Nintendo': 20 results, all on Nintendo: True
-Top 5 (untrained model, so the order is meaningless for now): New Super Mario Bros. U Deluxe - Nintend [Nintendo]; Cruis'n - Nintendo Wii [Nintendo]; Minecraft - Nintendo Switch [Nintendo]; Imagine Teacher - Nintendo DS [Nintendo]; Mario and Luigi: Dream Team Nintendo 3DS [Nintendo]
+Top 5 (untrained model, so the order is meaningless for now): New Super Mario Bros. U Deluxe - Nintend [Nintendo]; Cruis'n - Nintendo Wii [Nintendo]; Minecraft - Nintendo Switch [Nintendo]; Mario and Luigi: Dream Team Nintendo 3DS [Nintendo]; Imagine Teacher - Nintendo DS [Nintendo]
