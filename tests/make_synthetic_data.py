@@ -35,11 +35,15 @@ def main() -> None:
             rec = {
                 "main_category": "Video Games", "title": title,
                 "average_rating": round(rng.uniform(2.5, 5), 1), "rating_number": rng.randint(1, 5000),
-                "features": [], "description": [f"A {plat} game about {rng.choice(WORDS).lower()}."],
+                "description": [f"A {plat} game about {rng.choice(WORDS).lower()}."],
                 "price": rng.choice([None, round(rng.uniform(5, 70), 2)]),
-                "images": [], "videos": [], "store": f"Studio {i % 30}",
+                "images": [{"thumb": None, "large": f"https://picsum.photos/seed/game{i}/300/400",
+                            "variant": "MAIN", "hi_res": None}],
+                "features": [f"{rng.choice(WORDS)} mode", "Up to 2 players"],
+                "videos": [], "store": f"Studio {i % 30}",
                 "categories": ["Video Games", plat] + leaf,
-                "details": {"Release date": f"March {1 + i % 28}, {2008 + i % 15}"},
+                "details": {"Release date": f"March {1 + i % 28}, {2008 + i % 15}", "Platform": plat,
+                            "Manufacturer": f"Studio {i % 30}", "Date First Available": "May 2, 2019"},
                 "parent_asin": f"B{i:09d}", "bought_together": None,
             }
             f.write(json.dumps(rec) + "\n")

@@ -88,3 +88,30 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# ------------------------------------------------------------------------------------------
+# Fast version used by the models: profile tokens from a history given as arrays.
+# Same rules as build_profiles (liked only, gifts excluded, recency half-life, >= 30% share).
+def tokens_from_history(item_idx, labels, timestamps, gifts, item_platform, item_price,
+                        half_life_days: float = HALF_LIFE_DAYS, override: dict | None = None) -> list[str]:
+    """override = {"platforms": [...], "price_bucket": "..."} (profile typed by the player in the app)."""
+    if override:
+        tokens = [f"<plat_{p}>" for p in override.get("platforms", []) if p]
+        return tokens + [f"<price_{override.get('price_bucket') or 'unknown'}>"]
+    item_idx = np.asarray(item_idx, dtype=int)
+    keep = (np.asarray(labels) == 1) & ~np.asarray(gifts, dtype=bool)
+    if not keep.any():
+        return ["<price_unknown>"]
+    items, ts = item_idx[keep], np.asarray(timestamps, dtype=float)[keep]
+    w = 0.5 ** ((ts.max() - ts) / MS_PER_DAY / half_life_days)
+    plats = item_platform[items]
+    shares: dict[str, float] = {}
+    for p, wi in zip(plats, w):
+        shares[p] = shares.get(p, 0.0) + wi
+    total = sum(shares.values())
+    tokens = [f"<plat_{p}>" for p, s in sorted(shares.items(), key=lambda x: -x[1]) if s / total >= 0.3]
+    prices = item_price[items]
+    prices = prices[~np.isnan(prices)]
+    bucket = price_bucket(float(np.median(prices))) if len(prices) >= 2 else "unknown"
+    return tokens + [f"<price_{bucket}>"]
