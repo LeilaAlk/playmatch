@@ -34,6 +34,8 @@ def meta_line(g: dict) -> str:
         bits.append(f"${g['price']:.2f}")
     if g.get("release"):
         bits.append(str(g["release"]))
+    if g.get("age_rating"):
+        bits.append(f"Rated {g['age_rating']}")
     if g.get("publisher"):
         bits.append(str(g["publisher"])[:30])
     if g.get("average_rating"):

@@ -1,6 +1,6 @@
 """Add the display metadata of each game to data/processed/items.parquet (for the interface).
 
-Adds: image_url (cover), features (bullet points), release_date (true "Release date" field),
+Adds: image_url (cover), features (bullet points), age_rating ("Rated": ESRB), release_date (true "Release date"),
 date_first_available (date the product appeared on Amazon), manufacturer / brand, platform_raw
 (the "Platform" field of the details), and prints how many games have each field.
 Splits, ids and models are not changed.
@@ -54,6 +54,7 @@ def main() -> None:
             "date_first_available": d.get("Date First Available"),
             "manufacturer": d.get("Manufacturer") or d.get("Brand"),
             "platform_raw": d.get("Platform"),
+            "age_rating": d.get("Rated"),
             "details_json": json.dumps(d)[:2000],
         }
     extra = pd.DataFrame.from_dict(rows, orient="index").rename_axis("parent_asin").reset_index()
@@ -61,11 +62,13 @@ def main() -> None:
     items = items.merge(extra, on="parent_asin", how="left")
     items.to_parquet(path, index=False)
     print(f"{len(items):,} games updated in {path}")
-    for col in ["image_url", "features", "release_date", "date_first_available", "manufacturer", "platform_raw"]:
+    for col in ["image_url", "features", "release_date", "date_first_available", "manufacturer", "platform_raw",
+                "age_rating"]:
         share = items[col].notna() & (items[col].astype(str).str.len() > 0)
         print(f"  {col:22s} {share.mean():6.1%}")
     keys = pd.Series([k for s in items.details_json.dropna() for k in json.loads(s)]).value_counts().head(15)
     print("Most common keys of 'details':", keys.to_dict())
+    print("Age ratings:", items.age_rating.value_counts().head(10).to_dict())
 
 
 if __name__ == "__main__":

@@ -11,8 +11,9 @@ Two steps, because the raw reviews (2.7 GB) stay on Andrea's computer:
 
   1. extract (local, needs data/raw):  python -m src.queries extract --raw data/raw --data data/processed
      -> data/processed/query_sources.parquet  (small: copy it to Colab with data/processed)
-  2. generate (Colab GPU):              python -m src.queries generate --data data/processed
-     -> data/processed/queries.parquet
+  2. generate (Colab GPU):              python -m src.queries generate --data data/processed --splits test,valid
+                                        python -m src.queries generate --data data/processed --splits train
+     -> data/processed/queries.parquet (the second run adds the train requests to the first ones)
 
   Without GPU / for tests:              python -m src.queries generate --data data/processed --template
 Sample sizes: --test-sample 3000 (+ all cold users), --valid-sample 2000, --train-sample 10000.
@@ -129,8 +130,11 @@ def leaks_title(query: str, title: str) -> bool:
 def generate(args) -> None:
     data = Path(args.data)
     src = add_limits(pd.read_parquet(data / "query_sources.parquet"), args.seed)
+    splits = args.splits.split(",")
+    src = src[src.split.isin(splits)]
     src = src.sort_values("split", key=lambda s: s.map({"test": 0, "valid": 1, "train": 2})).reset_index(drop=True)
     out_path = data / "queries.parquet"
+    print(f"Generating {len(src):,} requests for splits {splits}")
     queries = [None] * len(src)
     if args.template:
         queries = [template_query(r) for r in src.itertuples()]
@@ -163,16 +167,20 @@ def generate(args) -> None:
     src.loc[leak, "query"] = [template_query(r) for r in src[leak].itertuples()]
     src.loc[leak, "source"] = "template_after_leak"
     keep = ["split", "user_idx", "item_idx", "is_cold", "query", "source", "limit_platform", "limit_max_price"]
-    src[keep].to_parquet(out_path, index=False)
-    summary = {"pairs": len(src), "by_split": src.split.value_counts().to_dict(),
-               "source": src.source.value_counts().to_dict(),
-               "with_platform_limit": int(src.limit_platform.notna().sum()),
-               "with_budget_limit": int(src.limit_max_price.notna().sum())}
+    new = src[keep]
+    if out_path.exists():  # keep the requests already generated for the other splits
+        old = pd.read_parquet(out_path)
+        new = pd.concat([old[~old.split.isin(splits)], new], ignore_index=True)
+    new.to_parquet(out_path, index=False)
+    summary = {"pairs": len(new), "by_split": new.split.value_counts().to_dict(),
+               "source": new.source.value_counts().to_dict(),
+               "with_platform_limit": int(new.limit_platform.notna().sum()),
+               "with_budget_limit": int(new.limit_max_price.notna().sum())}
     Path(args.out).mkdir(exist_ok=True)
     (Path(args.out) / "queries_stats.json").write_text(json.dumps(summary, indent=2))
     print(json.dumps(summary, indent=2))
     print("Examples:")
-    for r in src[src.split == "test"].head(5).itertuples():
+    for r in src.head(5).itertuples():
         print(f"  [{r.title[:40]}] -> {r.query}")
     print(f"Saved {out_path}")
 
@@ -186,6 +194,7 @@ def main() -> None:
     g.add_argument("--model", default=LLM)
     g.add_argument("--batch", type=int, default=48)
     g.add_argument("--template", action="store_true", help="no LLM: template requests (tests only)")
+    g.add_argument("--splits", default="test,valid,train", help="e.g. test,valid first, then train")
     g.add_argument("--out", default="results")
     for p in (e, g):
         p.add_argument("--data", default="data/processed")

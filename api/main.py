@@ -195,6 +195,7 @@ def card(idx: int, rank: int, why: str | None = None) -> dict:
            "price": None if pd.isna(r.price) else float(r.price),
            "release": get("release_date") or (None if get("release_year") is None else str(int(get("release_year")))),
            "publisher": get("store") or get("manufacturer"), "image_url": get("image_url"),
+           "age_rating": get("age_rating"),
            "average_rating": None if get("average_rating") is None else float(get("average_rating"))}
     if why:
         out["why"] = why

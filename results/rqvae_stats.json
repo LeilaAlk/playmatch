@@ -1,0 +1,24 @@
+{
+  "games": 7318,
+  "collab_source": "nlgcl",
+  "codes_used": {
+    "s": 256,
+    "a1": 213,
+    "b1": 256
+  },
+  "collisions_resolved": {
+    "semantic": 185,
+    "collaborative": 902
+  },
+  "collision_rate": {
+    "semantic": 0.0253,
+    "collaborative": 0.1233
+  },
+  "final_losses": {
+    "shared": 0.0027504349127411842,
+    "semantic": 0.0010477884206920862,
+    "collaborative": 0.009196645580232143
+  },
+  "nearest_text_neighbour_shares_first_two_codes": 0.0894,
+  "random_pair_shares_first_two_codes": 0.0005
+}

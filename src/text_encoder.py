@@ -17,9 +17,13 @@ BGE_QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
 
 def item_text(row) -> str:
-    """Text of a game: title, publisher, category path, description (never review text)."""
-    parts = [str(row.get("title") or ""), str(row.get("store") or ""),
-             str(row.get("categories") or ""), str(row.get("description") or "")[:1000]]
+    """Text of a game: title, publisher, category path, age rating, key features, description (never reviews)."""
+    def val(key):
+        v = row.get(key)
+        return "" if v is None or (isinstance(v, float) and v != v) else str(v)
+    rating = val("age_rating")
+    parts = [val("title"), val("store"), val("categories"), f"Rated {rating}" if rating else "",
+             val("features")[:500], val("description")[:1000]]
     return ". ".join(p for p in parts if p)
 
 
