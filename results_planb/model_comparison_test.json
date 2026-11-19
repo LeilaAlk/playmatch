@@ -1,0 +1,36 @@
+{
+  "twostage": {
+    "all": {
+      "users": 4501,
+      "NDCG@10": 0.05323,
+      "Recall@20": 0.10198,
+      "Coverage@10": 0.4724,
+      "AvgPop@10": 46.7
+    },
+    "warm": {
+      "users": 2594,
+      "NDCG@10": 0.05121,
+      "Recall@20": 0.09792,
+      "Coverage@10": 0.39683,
+      "AvgPop@10": 44.84
+    },
+    "cold": {
+      "users": 1907,
+      "NDCG@10": 0.05598,
+      "Recall@20": 0.1075,
+      "Coverage@10": 0.34395,
+      "AvgPop@10": 49.24
+    },
+    "cold_request_only": {
+      "users": 1907,
+      "NDCG@10": 0.0262,
+      "Recall@20": 0.07813,
+      "Coverage@10": 0.36075,
+      "AvgPop@10": 16.63
+    },
+    "platform_match@10": 0.5738,
+    "limit_respect@10": 1.0,
+    "ms_per_request": 29.4
+  },
+  "extra": {}
+}

@@ -1,0 +1,89 @@
+{
+  "args": {
+    "data": "data/processed",
+    "out": "results",
+    "models": "models",
+    "epochs": 10,
+    "batch": 64,
+    "lr": 0.0005,
+    "max_targets": 5,
+    "sample": 0,
+    "val_rank": 500,
+    "patience": 3,
+    "no_profile": false,
+    "offline": false,
+    "seed": 0
+  },
+  "history": [
+    {
+      "epoch": 1,
+      "train_loss": 7.047579140415541,
+      "val_loss": 4.969595491559607,
+      "val_ndcg10": 0.00452371901428583,
+      "val_recall20": 0.018
+    },
+    {
+      "epoch": 2,
+      "train_loss": 4.61852356734486,
+      "val_loss": 4.640146360385282,
+      "val_ndcg10": 0.0046866882555750035,
+      "val_recall20": 0.018
+    },
+    {
+      "epoch": 3,
+      "train_loss": 4.230370627644267,
+      "val_loss": 4.394636349692106,
+      "val_ndcg10": 0.005297424628754913,
+      "val_recall20": 0.016
+    },
+    {
+      "epoch": 4,
+      "train_loss": 4.0485558342834125,
+      "val_loss": 4.226243984433,
+      "val_ndcg10": 0.005239685104267924,
+      "val_recall20": 0.012
+    },
+    {
+      "epoch": 5,
+      "train_loss": 3.929434661228269,
+      "val_loss": 4.091407867508803,
+      "val_ndcg10": 0.004261859507142915,
+      "val_recall20": 0.012
+    },
+    {
+      "epoch": 6,
+      "train_loss": 3.845562462623959,
+      "val_loss": 3.9989404583901633,
+      "val_ndcg10": 0.004035565121611999,
+      "val_recall20": 0.014
+    },
+    {
+      "epoch": 7,
+      "train_loss": 3.795026464251571,
+      "val_loss": 3.9228254031692935,
+      "val_ndcg10": 0.004123212623289701,
+      "val_recall20": 0.014
+    },
+    {
+      "epoch": 8,
+      "train_loss": 3.759729316129575,
+      "val_loss": 3.870585415064912,
+      "val_ndcg10": 0.004123212623289701,
+      "val_recall20": 0.018
+    },
+    {
+      "epoch": 9,
+      "train_loss": 3.7388744615402536,
+      "val_loss": 3.8527626348255155,
+      "val_ndcg10": 0.004123212623289701,
+      "val_recall20": 0.02
+    },
+    {
+      "epoch": 10,
+      "train_loss": 3.725868713502752,
+      "val_loss": 3.846227358927769,
+      "val_ndcg10": 0.004123212623289701,
+      "val_recall20": 0.014
+    }
+  ]
+}
