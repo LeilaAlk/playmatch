@@ -34,6 +34,8 @@ DATA_DIR = Path(os.environ.get("PLAYMATCH_DATA", "data/processed"))
 DB_PATH = Path(os.environ.get("PLAYMATCH_DB", "data/app.db"))
 MODEL_KIND = os.environ.get("PLAYMATCH_MODEL", "auto")
 Platform = Literal["PlayStation", "Xbox", "Nintendo", "PC", "other"]
+EMPTY_HIST = {"item_idx": np.zeros(0, int), "label": np.zeros(0, int), "timestamp": np.zeros(0, float),
+              "gift": np.zeros(0, bool)}
 
 app = FastAPI(title="PlayMatch API", version="0.2-week3")
 
@@ -71,6 +73,7 @@ def startup() -> None:
         if MODEL_KIND != "mock":
             from src.predict import load_predictor
             State.predictor = load_predictor(State.ctx, MODEL_KIND)
+            warm_up()
     except FileNotFoundError:
         State.catalog = pd.DataFrame({
             "item_idx": range(5), "parent_asin": [f"DUMMY{i}" for i in range(5)],
@@ -78,6 +81,18 @@ def startup() -> None:
             "platform": ["Nintendo", "PlayStation", "PC", "Nintendo", "Xbox"],
             "price": [29.99, 59.99, 19.99, 9.99, 39.99], "popularity": [5, 4, 3, 2, 1]})
         State.asin_to_idx = dict(zip(State.catalog.parent_asin, State.catalog.item_idx))
+
+
+def warm_up() -> None:
+    """Load the text encoder (BGE) and run one request at start-up, so the first real request is fast."""
+    if State.predictor is None:
+        return
+    t0 = time.time()
+    try:
+        State.predictor.recommend(EMPTY_HIST, "warm up", k=1)
+        print(f"Model ready ({State.predictor.name}) - warm-up took {time.time() - t0:.1f}s")
+    except Exception as exc:  # never block the API start
+        print(f"Warm-up skipped: {exc}")
 
 
 startup()
@@ -112,10 +127,6 @@ class Profile(BaseModel):
 
 
 # ---------------------------------------------------------------- history
-EMPTY_HIST = {"item_idx": np.zeros(0, int), "label": np.zeros(0, int), "timestamp": np.zeros(0, float),
-              "gift": np.zeros(0, bool)}
-
-
 def app_events(user_id: str) -> tuple[dict, list]:
     with db() as con:
         row = con.execute("SELECT profile_json FROM profiles WHERE user_id=?", (user_id,)).fetchone()

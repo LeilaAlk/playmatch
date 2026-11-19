@@ -3,26 +3,51 @@
 Recommending video games from a player profile and a plain-language request.
 RecSys Startup Sprint. Team: Julia (Project Lead), Andrea (MLE-Core), Talia (MLE-Ops), Leila (Data + Systems).
 
-Model: GenSAR-style generative retrieval (Shi et al., RecSys 2025) with NLGCL collaborative embeddings
-(Xu et al., RecSys 2025) and a player profile (platforms, budget) inferred from the games the player liked.
-Fallback model (plan B): BGE retrieval + NLGCL and profile re-ranking.
+Model served: **two-stage hybrid** (BGE text retrieval of 100 candidates, re-ranked with NLGCL collaborative
+embeddings (Xu et al., RecSys 2025) and the player profile). Also implemented and evaluated: a GenSAR-style
+generative model (Shi et al., RecSys 2025), which did not beat the baselines (see `results/`).
 
-## Quick start on a clean machine (under 10 minutes)
+## Quick start on a clean machine (target: under 10 minutes)
 
-Uses the trained model and processed data published on the Hugging Face Hub.
+You need Python 3.10+ and Git. The processed data and embeddings are **not** on GitHub (Amazon data):
+ask the team for access to the shared Drive folder `playmatch` and download `processed.zip`.
 
-```bash
-git clone https://github.com/LeilaAlk/playmatch.git && cd playmatch
+**Windows (Command Prompt)**
+
+```bat
+git clone https://github.com/LeilaAlk/playmatch.git
+cd playmatch
 python -m venv .venv
-source .venv/bin/activate            # Windows: .venv\Scripts\activate
+.venv\Scripts\activate
 pip install -r requirements.txt
-python scripts/artifacts.py download --repo <HF_REPO>      # trained model + processed data
-uvicorn api.main:app --port 8000                           # terminal 1 (API, http://localhost:8000/docs)
-streamlit run app/streamlit_app.py                          # terminal 2 (interface, http://localhost:8501)
 ```
 
-Check: `python tests/test_api.py` prints the model served and the response time.
-In the interface, the user id `player_42` loads player 42 of the dataset; any other id is a new app user.
+Put `processed.zip` in the `playmatch` folder, then:
+
+```bat
+powershell Expand-Archive processed.zip data
+dir data\processed\items_bge.npy
+python -m uvicorn api.main:app --port 8000
+```
+
+Wait for `Model ready (twostage)` and `Uvicorn running on http://127.0.0.1:8000`. In a **second** Command Prompt:
+
+```bat
+cd playmatch
+.venv\Scripts\activate
+python -m streamlit run app/streamlit_app.py
+```
+
+The interface opens at http://localhost:8501 (press Enter if Streamlit asks for an e-mail).
+Check: the sidebar shows `model: twostage`; in *Discover*, type a request and click *Start / refresh*.
+
+**Mac / Linux**: same steps with `source .venv/bin/activate` and `unzip processed.zip -d data`.
+
+Notes
+- Always start the servers with `python -m uvicorn` / `python -m streamlit`: some antivirus software
+  (Avast CyberCapture) blocks the `uvicorn.exe` / `streamlit.exe` launchers.
+- The first start downloads the BGE text encoder (about 130 MB) once.
+- `python tests/test_api.py` checks every endpoint and prints the model served and the response time.
 
 ## Full pipeline (reproduce everything)
 
@@ -40,7 +65,7 @@ In the interface, the user id `player_42` loads player 42 of the dataset; any ot
 | 8. Plan B | `python -m src.twostage --data data/processed --split test` | laptop | `results/twostage_*` |
 | 9. GenSAR training | `python -m src.train_gensar --data data/processed --epochs 10` (+ `--no-profile`) | Colab GPU | `models/gensar_best/`, `results/gensar_curve.png` |
 | 10. Final evaluation | `python -m src.evaluate_model --data data/processed --split test` | Colab GPU | `results/model_comparison_test.*`, `results/sample_users.md` |
-| 11. Publish | `huggingface-cli login` then `python scripts/artifacts.py upload --repo <HF_REPO>` | laptop | Hugging Face repo |
+| 11. Share | `powershell Compress-Archive -Force data\processed processed.zip`, put it in the team Drive folder | laptop | `processed.zip` (optional: `scripts/artifacts.py` publishes to a Hugging Face repo) |
 
 After step 7a, zip `data/processed` and put it on the Drive for Colab: `colab_playmatch.ipynb` runs steps 7b, 9 and 10.
 

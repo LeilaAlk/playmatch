@@ -199,14 +199,15 @@ def main() -> None:
           f"and {out / (name + '_curve.png')}")
 
 
-def plot_curves(history: list[dict], best_epoch: int, title: str, path: Path) -> None:
+def plot_curves(history: list[dict], best_epoch: int, title: str, path: Path,
+                val_label: str = "validation loss (BPR)") -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
     ep = [h["epoch"] for h in history]
     fig, (a, b) = plt.subplots(1, 2, figsize=(9, 3.2))
     a.plot(ep, [h["train_loss"] for h in history], label="train loss")
-    a.plot(ep, [h["val_loss"] for h in history], label="validation loss (BPR)")
+    a.plot(ep, [h["val_loss"] for h in history], label=val_label)
     a.set_xlabel("epoch"), a.set_title(f"{title}: losses"), a.legend()
     b.plot(ep, [h["val_ndcg10"] for h in history], label="val NDCG@10")
     b.plot(ep, [h["val_recall20"] for h in history], label="val Recall@20")

@@ -186,7 +186,7 @@ def main() -> None:
     best_epoch = min(history, key=lambda h: h["val_loss"])["epoch"]
     from src.nlgcl import plot_curves
     plot_curves([{**h, "val_ndcg10": h["val_ndcg10"], "val_recall20": h["val_recall20"]} for h in history],
-                best_epoch, name.upper(), Path(args.out) / f"{name}_curve.png")
+                best_epoch, name.upper(), Path(args.out) / f"{name}_curve.png", "validation loss (cross-entropy)")
     print(f"Best epoch {best_epoch} saved to {save_dir}; curves in {Path(args.out) / (name + '_curve.png')}")
 
 
