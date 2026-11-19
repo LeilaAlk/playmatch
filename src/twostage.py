@@ -123,7 +123,8 @@ def main() -> None:
     ap.add_argument("--out", default="results")
     args = ap.parse_args()
     ctx = load_context(args.data)
-    q = pd.read_parquet(Path(args.data) / "queries.parquet")
+    from src.queries import load_queries
+    q = load_queries(Path(args.data))
     model = TwoStage(ctx, args.collab)
     model.weights = tune(model, q[q.split == "valid"], args.ablation)
     rows = q[q.split == args.split]

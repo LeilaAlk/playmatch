@@ -129,7 +129,8 @@ def main() -> None:
     data = Path(args.data)
     ctx = load_context(data)
     sem, col = load_ids(data)
-    queries = pd.read_parquet(data / "queries.parquet")
+    from src.queries import load_queries
+    queries = load_queries(data)
     train, val, val_search = build_examples(ctx, sem, col, queries, args, rng)
     print(f"{name}: {len(train):,} training examples, {len(val):,} validation examples, "
           f"{len(val_search)} validation requests ranked each epoch, device {device}")

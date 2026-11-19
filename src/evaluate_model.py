@@ -175,7 +175,8 @@ def main() -> None:
     data, out = Path(args.data), Path(args.out)
     out.mkdir(exist_ok=True)
     ctx = load_context(data)
-    q = pd.read_parquet(data / "queries.parquet")
+    from src.queries import load_queries
+    q = load_queries(data)
     rows, valid_rows = q[q.split == args.split].copy(), q[q.split == "valid"]
     truth = dict(zip(rows.user_idx, rows.item_idx))
     groups = {"warm": set(rows[~rows.is_cold].user_idx), "cold": set(rows[rows.is_cold].user_idx)}

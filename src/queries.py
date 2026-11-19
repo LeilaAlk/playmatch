@@ -15,6 +15,7 @@ Two steps, because the raw reviews (2.7 GB) stay on Andrea's computer:
                                         python -m src.queries generate --data data/processed --splits train
      -> data/processed/queries.parquet (the second run adds the train requests to the first ones)
 
+  3. stricter leak check (anywhere):    python -m src.queries clean --data data/processed
   Without GPU / for tests:              python -m src.queries generate --data data/processed --template
 Sample sizes: --test-sample 3000 (+ all cold users), --valid-sample 2000, --train-sample 10000.
 """
@@ -118,13 +119,54 @@ def template_query(row) -> str:
     return text
 
 
+# Common words of game titles that a request may use without naming the game.
+GENERIC = {"adventure", "adventures", "world", "worlds", "racing", "racer", "race", "sports", "sport", "party",
+           "legend", "legends", "hero", "heroes", "quest", "battle", "battles", "war", "wars", "dance", "music",
+           "fitness", "puzzle", "puzzles", "farm", "farming", "simulator", "simulation", "fighter", "fighting",
+           "shooter", "star", "stars", "super", "ultimate", "monster", "monsters", "hunter", "hunters", "city",
+           "island", "kingdom", "night", "dark", "black", "space", "zombie", "zombies", "football", "soccer",
+           "basketball", "baseball", "hockey", "golf", "tennis", "chess", "cards", "card", "kids", "family",
+           "story", "tales", "life", "time", "dead", "fantasy", "pack", "bundle", "season", "play", "player",
+           "players", "online", "game", "games", "relaxing", "horror", "builder", "building", "survival", "magic"}
+
+
 def leaks_title(query: str, title: str) -> bool:
-    q = set(re.findall(r"[a-z0-9']+", query.lower()))
-    words = [w for w in re.findall(r"[a-z0-9']+", str(title).lower()) if w not in STOP and len(w) > 2]
+    """True if the request names the game: one distinctive word of the title, or two title words."""
+    q = set(re.findall(r"[a-z0-9]+", str(query).lower()))
+    words = [w for w in re.findall(r"[a-z0-9]+", str(title).lower()) if w not in STOP and len(w) > 2]
     if not words:
         return False
-    hits = sum(w in q for w in words)
-    return hits >= 2 or (len(words) == 1 and hits == 1) or (words[0] in q and len(words[0]) >= 5)
+    if any(len(w) >= 4 and w not in GENERIC and w in q for w in words):
+        return True
+    return sum(w in q for w in words) >= 2
+
+
+def load_queries(data: Path) -> pd.DataFrame:
+    """Requests used for training and evaluation: LLM requests that passed the leak check.
+    (Template requests mention the game's platform, so they are kept out; tests without LLM use them.)"""
+    q = pd.read_parquet(Path(data) / "queries.parquet")
+    llm = q[q.source == "llm"]
+    if len(llm):
+        return llm.reset_index(drop=True)
+    print("No LLM requests found: using template requests (tests only)")
+    return q
+
+
+def clean(args) -> None:
+    """Re-run the (stricter) leak check on requests already generated, without regenerating them."""
+    data = Path(args.data)
+    q = pd.read_parquet(data / "queries.parquet")
+    titles = pd.read_parquet(data / "items.parquet").set_index("item_idx").title
+    is_llm = q.source == "llm"
+    leak = is_llm & np.array([leaks_title(qq, titles.get(i, "")) for qq, i in zip(q["query"], q.item_idx)])
+    q.loc[leak, "source"] = "leak_removed"
+    q.to_parquet(data / "queries.parquet", index=False)
+    kept = q[q.source == "llm"]
+    print(f"Stricter leak check: {int(leak.sum()):,} more requests removed. Kept for training/evaluation: "
+          f"{len(kept):,} {kept.split.value_counts().to_dict()} (cold in test: "
+          f"{int(kept[(kept.split == 'test') & kept.is_cold].shape[0]):,})")
+    for r in q[leak].head(5).itertuples():
+        print(f"  removed: [{titles.get(r.item_idx, '')[:40]}] -> {r.query[:100]}")
 
 
 def generate(args) -> None:
@@ -188,6 +230,8 @@ def generate(args) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser()
     sub = ap.add_subparsers(dest="step", required=True)
+    c = sub.add_parser("clean")
+    c.add_argument("--data", default="data/processed")
     e = sub.add_parser("extract")
     e.add_argument("--raw", default="data/raw")
     g = sub.add_parser("generate")
@@ -203,7 +247,7 @@ def main() -> None:
     e.add_argument("--valid-sample", type=int, default=2000)
     e.add_argument("--train-sample", type=int, default=10000)
     args = ap.parse_args()
-    extract(args) if args.step == "extract" else generate(args)
+    {"extract": extract, "generate": generate, "clean": clean}[args.step](args)
 
 
 if __name__ == "__main__":
